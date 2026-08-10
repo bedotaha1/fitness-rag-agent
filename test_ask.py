@@ -6,10 +6,18 @@ Run with: pytest test_ask.py
 Notice none of these tests touch a real Chroma database or spend real
 DeepSeek quota. That's the entire payoff of Depends() from Day 25.
 """
+from collections import defaultdict
+
 from fastapi.testclient import TestClient
 
-from dependencies import get_collection, get_retrieve_fn, get_seek_client
+from dependencies import get_client_id, get_collection, get_request_counts, get_retrieve_fn, get_seek_client
 from main import app
+from usage_log import init_db
+
+# lifespan (where init_db() normally runs) doesn't fire under a plain
+# TestClient(app) — only under `with TestClient(app) as client:`. Calling it
+# directly here is safe and idempotent (CREATE TABLE IF NOT EXISTS).
+init_db()
 
 
 class FakeMessage:
@@ -48,6 +56,12 @@ def fake_retrieve(query, collection):
 app.dependency_overrides[get_collection] = lambda: None  # unused by the fake client path
 app.dependency_overrides[get_seek_client] = lambda: FakeSeekClient()
 app.dependency_overrides[get_retrieve_fn] = lambda: fake_retrieve
+app.dependency_overrides[get_client_id] = lambda: "test-client-ip"
+
+# A fresh dict per test run — real request_counts on app.state only exists
+# once lifespan has run, which plain TestClient(app) doesn't trigger.
+_test_request_counts = defaultdict(int)
+app.dependency_overrides[get_request_counts] = lambda: _test_request_counts
 
 client = TestClient(app)
 
@@ -71,3 +85,24 @@ def test_health_check():
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
+
+
+def test_demo_limit_blocks_after_max_requests():
+    # Fresh counter, isolated to this test, so it doesn't interfere with
+    # the tests above that also hit /ask under the same overridden client_id.
+    app.dependency_overrides[get_request_counts] = lambda: defaultdict(int)
+    fresh_counts = app.dependency_overrides[get_request_counts]()
+    app.dependency_overrides[get_request_counts] = lambda: fresh_counts
+
+    for i in range(3):
+        response = client.post("/ask", json={"question": f"question {i}"})
+        assert response.status_code == 200
+        assert response.json()["requests_remaining"] == 2 - i
+
+    # 4th request from the same client_id should be blocked, no LLM call made
+    response = client.post("/ask", json={"question": "one too many"})
+    assert response.status_code == 429
+    assert response.json()["detail"]["error_code"] == "DEMO_LIMIT_REACHED"
+
+    # restore the shared counter for any tests that might run after this one
+    app.dependency_overrides[get_request_counts] = lambda: _test_request_counts

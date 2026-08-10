@@ -12,9 +12,16 @@ class Question(BaseModel):
     question: str
 
 
+class UnlockRequest(BaseModel):
+    passkey: str
+
+
 class AnswerResponse(BaseModel):
     answer: str
     context: str  # the retrieved chunks that were actually used, for transparency/debugging
+    requests_remaining: Optional[int] = None  # demo rate-limit counter, None if limiting is off
+    faithful: Optional[bool] = None  # None = no retrieval occurred, nothing to judge
+    faithfulness_reasoning: Optional[str] = None
 
 
 class ErrorResponse(BaseModel):

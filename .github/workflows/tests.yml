@@ -1,0 +1,35 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest httpx
+
+      - name: Run test suite
+        run: pytest test_ask.py -v
+        env:
+          # Tests use dependency_overrides to fake the DeepSeek client and
+          # Chroma collection entirely — no real API key or network call is
+          # ever made, so this doesn't need to be a real key. It only exists
+          # because main.py's OpenAI(api_key=...) would otherwise raise at
+          # import time if the env var were completely unset.
+          DEEPSEEK_API_KEY: "ci-placeholder-not-a-real-key"

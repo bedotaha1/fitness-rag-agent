@@ -26,7 +26,10 @@
     background: var(--bg);
     color: var(--text);
     font-family: var(--display);
-    min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
 
   .topbar {
@@ -35,6 +38,7 @@
     justify-content: space-between;
     padding: 18px 28px;
     border-bottom: 1px solid var(--line);
+    flex: none;
   }
 
   .brand {
@@ -65,17 +69,23 @@
     grid-template-columns: 1fr 340px;
     gap: 1px;
     background: var(--line);
-    min-height: calc(100vh - 61px);
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
   }
   @media (max-width: 860px) {
-    .layout { grid-template-columns: 1fr; }
+    .layout {
+      grid-template-columns: 1fr;
+      overflow-y: auto;
+    }
   }
 
-  .chat-col { background: var(--bg); display: flex; flex-direction: column; }
-  .inspect-col { background: var(--bg); padding: 20px; }
+  .chat-col { background: var(--bg); display: flex; flex-direction: column; min-height: 0; }
+  .inspect-col { background: var(--bg); padding: 20px; display: flex; flex-direction: column; min-height: 0; overflow-y: auto; }
 
   .thread {
     flex: 1;
+    min-height: 0;
     padding: 24px 28px;
     overflow-y: auto;
     display: flex;
@@ -136,6 +146,35 @@
   }
   .composer button:disabled { opacity: 0.5; cursor: not-allowed; }
 
+  .unlock {
+    display: flex;
+    gap: 6px;
+  }
+  .unlock input {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--text);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-family: var(--mono);
+    font-size: 12px;
+    width: 130px;
+  }
+  .unlock input:focus { outline: 2px solid var(--amber); outline-offset: -1px; }
+  .unlock button {
+    background: var(--teal);
+    color: #14171c;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .unlock button:disabled { opacity: 0.5; cursor: not-allowed; }
+
   .try-row {
     padding: 0 28px 14px 28px;
     display: flex;
@@ -162,6 +201,7 @@
     text-transform: uppercase;
     color: var(--text-muted);
     margin-bottom: 16px;
+    flex: none;
   }
 
   .readout {
@@ -170,6 +210,7 @@
     border-radius: 10px;
     padding: 16px;
     margin-bottom: 12px;
+    flex: none;
   }
 
   .readout-row {
@@ -226,7 +267,8 @@
     font-size: 11.5px;
     line-height: 1.6;
     color: var(--text-muted);
-    max-height: 260px;
+    flex: 1;
+    min-height: 0;
     overflow-y: auto;
     white-space: pre-wrap;
   }
@@ -243,7 +285,14 @@
 
 <div class="topbar">
   <div class="brand">FITNESS<span>RAG</span>AGENT — CONSOLE</div>
-  <div class="health"><span id="healthDot" class="dot"></span><span id="healthText">checking API…</span></div>
+    <div style="display:flex;align-items:center;gap:18px;">
+      <a href="/stats" target="_blank" style="color:var(--text-muted);text-decoration:none;font-family:var(--mono);font-size:11px;border:1px solid var(--line);padding:5px 10px;border-radius:100px;">USAGE STATS →</a>
+      <form class="unlock" id="unlockForm">
+        <input id="passKeyInput" type="password" placeholder="pass key" autocomplete="off" />
+        <button type="submit" id="unlockBtn">Unlock</button>
+      </form>
+      <div class="health"><span id="healthDot" class="dot"></span><span id="healthText">checking API…</span></div>
+    </div>
 </div>
 
 <div class="layout">
@@ -277,6 +326,14 @@
         <span class="readout-key">Tool called</span>
         <span class="readout-val" id="toolVal">—</span>
       </div>
+      <div class="readout-row">
+        <span class="readout-key">Demo tries left</span>
+        <span class="readout-val" id="remainingVal">—</span>
+      </div>
+      <div class="readout-row">
+        <span class="readout-key">Faithfulness</span>
+        <span class="readout-val" id="faithfulVal">—</span>
+      </div>
     </div>
 
     <div class="panel-title" style="margin-top:22px;">Retrieved Context</div>
@@ -285,9 +342,11 @@
 </div>
 
 <script>
-  // Point this at your running API. Defaults to localhost for local testing;
-  // change to your deployed URL once Day 28 deployment is live.
-  const API_URL = "http://localhost:8000";
+  // Relative URL: works automatically whether you're running locally
+  // (localhost:8000) or on the deployed Render URL — since the frontend is
+  // served BY the same FastAPI app (StaticFiles mount in main.py), "" always
+  // means "this same origin," no hardcoded URL to remember to change.
+  const API_URL = "";
 
   const thread = document.getElementById("thread");
   const composer = document.getElementById("composer");
@@ -296,9 +355,15 @@
   const statusVal = document.getElementById("statusVal");
   const latencyVal = document.getElementById("latencyVal");
   const toolVal = document.getElementById("toolVal");
+  const remainingVal = document.getElementById("remainingVal");
+  const faithfulVal = document.getElementById("faithfulVal");
   const contextBox = document.getElementById("contextBox");
   const healthDot = document.getElementById("healthDot");
   const healthText = document.getElementById("healthText");
+  const unlockForm = document.getElementById("unlockForm");
+  const passKeyInput = document.getElementById("passKeyInput");
+  const unlockBtn = document.getElementById("unlockBtn");
+  let unlimited = false;
 
   function addMessage(role, text, isError=false) {
     const empty = thread.querySelector(".empty-state");
@@ -333,32 +398,109 @@
     addMessage("user", question);
     sendBtn.disabled = true;
     const start = performance.now();
+    let agentBubble = null;
+    let answered = false;
+
+    const getBubble = () => {
+      if (!agentBubble) {
+        const wrap = addMessage("agent", "");
+        agentBubble = wrap.querySelector(".bubble");
+      }
+      return agentBubble;
+    };
 
     try {
-      const res = await fetch(API_URL + "/ask", {
+      const res = await fetch(API_URL + "/ask/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question })
       });
-      const elapsed = Math.round(performance.now() - start);
-      const body = await res.json();
 
-      latencyVal.textContent = elapsed + " ms";
-
-      if (res.ok) {
-        statusVal.innerHTML = `<span class="chip ok">${res.status} OK</span>`;
-        const calledTool = !!(body.context && body.context.trim());
-        toolVal.innerHTML = calledTool
-          ? `<span class="chip ok">YES</span>`
-          : `<span class="chip" style="background:rgba(138,145,156,0.15);color:var(--text-muted)">NO</span>`;
-        contextBox.textContent = calledTool ? body.context.trim() : "No retrieval — answered directly (out of scope, conversational, or clarifying question).";
-        addMessage("agent", body.answer);
-      } else {
+      // Non-2xx (e.g. demo limit 429) comes back as a normal JSON body.
+      if (!res.ok) {
+        const body = await res.json();
         const detail = body.detail || {};
+        latencyVal.textContent = Math.round(performance.now() - start) + " ms";
         statusVal.innerHTML = `<span class="chip err">${res.status} ${detail.error_code || "ERROR"}</span>`;
         toolVal.textContent = "—";
         contextBox.textContent = "Request failed before an answer was produced.";
         addMessage("agent", detail.message || "Something went wrong.", true);
+
+        if (detail.error_code === "DEMO_LIMIT_REACHED") {
+          remainingVal.innerHTML = `<span class="chip err">0</span>`;
+          input.disabled = true;
+          input.placeholder = "Demo limit reached — thanks for trying it out!";
+          document.querySelectorAll(".try-chip").forEach(chip => chip.disabled = true);
+        }
+        return;
+      }
+
+      // Stream the SSE body: events arrive as "event:\ndata:\n\n" blocks.
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        let sep;
+        while ((sep = buffer.indexOf("\n\n")) !== -1) {
+          const raw = buffer.slice(0, sep);
+          buffer = buffer.slice(sep + 2);
+          let type = "message";
+          let data = "";
+          for (const line of raw.split("\n")) {
+            if (line.startsWith("event:")) type = line.slice(6).trim();
+            else if (line.startsWith("data:")) data += line.slice(5).trim();
+          }
+          if (!data) continue;
+
+          const evt = JSON.parse(data);
+
+          if (type === "meta") {
+            if (unlimited || evt.requests_remaining === null || evt.requests_remaining === undefined) {
+              remainingVal.innerHTML = `<span class="chip ok" style="font-weight:800;">∞</span>`;
+            } else {
+              remainingVal.innerHTML = `<span class="chip ${evt.requests_remaining === 0 ? 'err' : 'ok'}">${evt.requests_remaining}</span>`;
+            }
+          } else if (type === "status") {
+            statusVal.innerHTML = `<span class="chip" style="background:rgba(217,163,78,0.15);color:var(--amber)">RETRIEVING</span>`;
+            getBubble().textContent = evt.message + "…";
+          } else if (type === "message") {
+            if (!answered) {
+              answered = true;
+              getBubble().textContent = "";
+            }
+            getBubble().textContent += evt.token;
+          } else if (type === "done") {
+            const elapsed = evt.latency_ms != null ? evt.latency_ms : Math.round(performance.now() - start);
+            latencyVal.textContent = elapsed + " ms";
+            statusVal.innerHTML = `<span class="chip ok">200 OK</span>`;
+
+            getBubble().textContent = evt.answer;
+
+            const calledTool = !!(evt.context && evt.context.trim());
+            toolVal.innerHTML = calledTool
+              ? `<span class="chip ok">YES</span>`
+              : `<span class="chip" style="background:rgba(138,145,156,0.15);color:var(--text-muted)">NO</span>`;
+            contextBox.textContent = calledTool ? evt.context.trim() : "No retrieval — answered directly (out of scope, conversational, or clarifying question).";
+
+            if (evt.faithful === null || evt.faithful === undefined) {
+              faithfulVal.innerHTML = `<span class="chip" style="background:rgba(138,145,156,0.15);color:var(--text-muted)">N/A</span>`;
+            } else if (evt.faithful === true) {
+              faithfulVal.innerHTML = `<span class="chip ok" title="${(evt.faithfulness_reasoning || '').replace(/"/g,'')}">GROUNDED</span>`;
+            } else {
+              faithfulVal.innerHTML = `<span class="chip err" title="${(evt.faithfulness_reasoning || '').replace(/"/g,'')}">FLAGGED</span>`;
+            }
+          } else if (type === "error") {
+            statusVal.innerHTML = `<span class="chip err">${evt.error_code || "ERROR"}</span>`;
+            const bubble = getBubble();
+            bubble.textContent = evt.message || "Something went wrong.";
+            bubble.closest(".msg").classList.add("error");
+          }
+        }
       }
     } catch (err) {
       latencyVal.textContent = "—";
@@ -379,6 +521,42 @@
 
   document.querySelectorAll(".try-chip").forEach(chip => {
     chip.addEventListener("click", () => ask(chip.dataset.q));
+  });
+
+  async function unlock() {
+    const passkey = passKeyInput.value.trim();
+    if (!passkey) return;
+    unlockBtn.disabled = true;
+    unlockBtn.textContent = "…";
+    try {
+      const res = await fetch(API_URL + "/unlock", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ passkey })
+      });
+      const body = await res.json();
+      if (res.ok) {
+        unlimited = true;
+        remainingVal.innerHTML = `<span class="chip ok" style="font-weight:800;">∞</span>`;
+        input.disabled = false;
+        sendBtn.disabled = false;
+        document.querySelectorAll(".try-chip").forEach(chip => chip.disabled = false);
+        addMessage("agent", "Unlocked — unlimited demo requests for this browser.", false);
+      } else {
+        addMessage("agent", (body.detail || {}).message || "Invalid pass key.", true);
+      }
+    } catch {
+      addMessage("agent", "Could not reach the API to unlock.", true);
+    } finally {
+      unlockBtn.disabled = false;
+      unlockBtn.textContent = "Unlock";
+      passKeyInput.value = "";
+    }
+  }
+
+  unlockForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    unlock();
   });
 </script>
 
