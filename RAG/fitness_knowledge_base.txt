@@ -1,0 +1,47 @@
+Strength Training Principles
+
+Progressive overload is the foundational principle behind long-term strength gains: the body only adapts and grows stronger when it is consistently asked to handle slightly more than it is currently used to, whether that means more weight, more repetitions, more sets, or less rest between sets. Without progressive overload, a training program will produce noticeable results for the first several weeks as the nervous system adapts, but muscular strength and size will plateau once the body has fully adjusted to a fixed stimulus.
+
+Compound exercises, which work multiple muscle groups and joints simultaneously, are generally prioritized over isolation exercises in a well-designed strength program. Squats work the quadriceps, hamstrings, glutes, and core together. Deadlifts recruit the entire posterior chain, from the calves through the upper back. Because compound movements train more total muscle mass per exercise, they tend to produce a greater hormonal response and are more time-efficient than isolation exercises like bicep curls, which target a single muscle group.
+
+Rest periods between sets should be matched to the training goal. Strength-focused training, using heavy loads for low repetitions, generally calls for longer rest periods of two to five minutes, since the nervous system needs more recovery time to produce maximal force again. Hypertrophy-focused training, using moderate loads for moderate repetitions, typically uses shorter rest periods of sixty to ninety seconds, since some accumulated fatigue is actually considered beneficial for muscle growth in that context.
+
+Training to muscular failure, where a set is continued until another repetition cannot be completed with good form, is a debated topic. Some research suggests that training close to failure on isolation exercises can accelerate hypertrophy, while consistently training compound barbell movements to absolute failure increases injury risk and impairs recovery for subsequent sessions, without providing a proportional benefit.
+
+
+Cardiovascular Training Guidelines
+
+Cardiovascular exercise is generally divided into two broad categories with different physiological effects: steady-state cardio and high-intensity interval training, commonly abbreviated as HIIT. Steady-state cardio involves maintaining a moderate, consistent effort level for an extended period, such as a 40-minute jog at a pace where conversation is still possible. HIIT alternates short bursts of near-maximal effort with brief recovery periods, such as 30 seconds of sprinting followed by 90 seconds of walking, repeated for several rounds.
+
+Steady-state cardio primarily improves what is known as aerobic capacity, the body's ability to use oxygen efficiently to produce energy over long durations. This form of training tends to be lower-impact and easier to sustain for beginners, and it is generally considered to carry a lower injury risk than high-intensity training, since the joints and connective tissue are not subjected to repeated maximal-effort stress.
+
+HIIT produces significant improvements in both aerobic and anaerobic capacity in less total training time than steady-state cardio, which is part of why it has become popular among people with limited time to exercise. However, because of the high effort involved, HIIT places considerably more stress on joints and the nervous system, and is generally not recommended more than two to three times per week for most people, with adequate recovery time built in between sessions.
+
+Heart rate zones are commonly used to guide cardio intensity. Zone 2 training, typically defined as 60 to 70 percent of an individual's maximum heart rate, has received particular attention in recent years for its role in building the mitochondrial density that underlies long-term aerobic fitness, and many endurance coaches recommend that the majority of a runner's total weekly training volume take place in this zone, even when the runner's primary goal is to eventually race at a much higher intensity.
+
+
+Recovery and Sleep
+
+Muscle growth does not occur during a workout itself; it occurs during the recovery period afterward, when the body repairs the microscopic muscle fiber damage caused by resistance training and, in the process of repairing it, builds the fibers back slightly larger and stronger than before. This is why a strength training program without adequate rest days between sessions targeting the same muscle group can actually produce worse results than a program with fewer total workouts but better-timed recovery.
+
+Sleep is one of the most significant, and most commonly underestimated, factors in recovery. During deep sleep, the body releases the majority of its daily growth hormone output, a hormone directly involved in tissue repair. Chronic sleep deprivation, commonly defined as consistently getting fewer than six hours per night, has been associated in multiple studies with reduced muscle protein synthesis, impaired glucose regulation, and a measurably higher risk of injury during training, independent of the training program itself.
+
+Delayed onset muscle soreness, commonly known as DOMS, is the muscle soreness that typically peaks 24 to 72 hours after an unfamiliar or unusually intense bout of exercise. It is caused by the same microscopic muscle fiber damage responsible for eventual strength gains, and while uncomfortable, it is not itself a reliable indicator of how effective a workout was; some highly effective training sessions produce very little soreness, particularly once the body has adapted to a given exercise over time.
+
+
+Nutrition Basics for Training
+
+Protein intake plays a central role in muscle repair and growth, since amino acids from dietary protein are the literal building blocks used to repair and build new muscle tissue. General guidance for people engaged in regular resistance training suggests a range of roughly 1.6 to 2.2 grams of protein per kilogram of body weight per day, somewhat higher than the intake typically recommended for a sedentary individual, though individual needs vary based on training volume, age, and overall goals.
+
+Carbohydrates serve as the body's primary and most readily accessible fuel source during moderate to high-intensity exercise, stored in the muscles and liver as glycogen. Depleted glycogen stores are a major contributor to fatigue during longer training sessions, which is part of why endurance athletes in particular are often advised to consume carbohydrates before and during extended training, not just afterward.
+
+The timing of nutrient intake around a workout, often called nutrient timing, was once considered critically important, with a widely cited "anabolic window" of roughly 30 to 60 minutes post-workout during which protein consumption was believed to be dramatically more effective. More recent research has generally softened this claim, suggesting that total daily protein and calorie intake matters considerably more than the precise timing of any single meal, provided a person is not training in a fasted state for many hours before or after a workout.
+
+
+Injury Prevention
+
+A proper warm-up before training serves two distinct purposes: raising muscle temperature to improve tissue elasticity, and priming the nervous system to recruit muscle fibers more efficiently once the actual working sets begin. A warm-up is generally most effective when it combines light cardiovascular activity with dynamic stretching and a small number of lighter-weight warm-up sets of the specific exercise about to be performed, rather than static stretching alone, which some research suggests can temporarily reduce maximal strength output if performed immediately before heavy lifting.
+
+Poor exercise form is one of the most common causes of preventable training injury, particularly under heavy load, where even small deviations from proper joint alignment can place disproportionate stress on tendons, ligaments, and spinal discs rather than the intended muscle group. This is a major reason experienced coaches generally recommend mastering technique at lighter loads before progressively adding weight, rather than prioritizing heavier weight early in a program.
+
+Overtraining syndrome results from a sustained imbalance between training stress and recovery, where the body is not given sufficient time to adapt before the next stressful stimulus is applied. Early warning signs include persistent fatigue not resolved by normal rest, declining performance despite consistent effort, disrupted sleep, and increased susceptibility to minor illness, since chronic training stress measurably affects immune system function. Left unaddressed, overtraining syndrome can take weeks or months of significantly reduced training to fully resolve.

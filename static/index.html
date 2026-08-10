@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fitness RAG Agent — Console</title>
+<style>
+  :root {
+    --bg: #14171c;
+    --panel: #1b1f26;
+    --panel-raised: #21262f;
+    --line: #2c323c;
+    --text: #eef1f4;
+    --text-muted: #8a919c;
+    --amber: #d9a34e;
+    --teal: #4fa895;
+    --rust: #c1594a;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+    --display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--display);
+    min-height: 100vh;
+  }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 28px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .brand {
+    font-weight: 800;
+    font-size: 15px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .brand span { color: var(--amber); }
+
+  .health {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--text-muted);
+  }
+  .dot.up { background: var(--teal); box-shadow: 0 0 8px var(--teal); }
+  .dot.down { background: var(--rust); box-shadow: 0 0 8px var(--rust); }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 1px;
+    background: var(--line);
+    min-height: calc(100vh - 61px);
+  }
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+
+  .chat-col { background: var(--bg); display: flex; flex-direction: column; }
+  .inspect-col { background: var(--bg); padding: 20px; }
+
+  .thread {
+    flex: 1;
+    padding: 24px 28px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .msg { max-width: 640px; line-height: 1.55; font-size: 14.5px; }
+  .msg.user { align-self: flex-end; }
+  .msg.agent { align-self: flex-start; }
+
+  .bubble {
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+  }
+  .msg.user .bubble { background: var(--panel-raised); }
+  .msg.agent .bubble { background: var(--panel); }
+  .msg.agent.error .bubble { border-color: var(--rust); }
+
+  .label {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+
+  .composer {
+    display: flex;
+    gap: 10px;
+    padding: 18px 28px;
+    border-top: 1px solid var(--line);
+  }
+  .composer input {
+    flex: 1;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--text);
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: var(--display);
+  }
+  .composer input:focus { outline: 2px solid var(--amber); outline-offset: -1px; }
+  .composer button {
+    background: var(--amber);
+    color: #14171c;
+    border: none;
+    padding: 0 20px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .composer button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .try-row {
+    padding: 0 28px 14px 28px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .try-chip {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    border: 1px solid var(--line);
+    padding: 5px 10px;
+    border-radius: 100px;
+    cursor: pointer;
+    background: transparent;
+  }
+  .try-chip:hover { border-color: var(--amber); color: var(--amber); }
+
+  /* --- Diagnostics panel (signature element) --- */
+  .panel-title {
+    font-weight: 800;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+
+  .readout {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+
+  .readout-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .readout-row:last-child { border-bottom: none; }
+  .readout-key {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .readout-val {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .chip {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 5px;
+    font-weight: 700;
+  }
+  .chip.ok { background: rgba(79,168,149,0.15); color: var(--teal); }
+  .chip.err { background: rgba(193,89,74,0.15); color: var(--rust); }
+
+  .bar-track {
+    height: 4px;
+    background: var(--line);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+  .bar-fill {
+    height: 100%;
+    background: var(--amber);
+    width: 0%;
+    transition: width 0.4s ease;
+  }
+
+  .context-box {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    line-height: 1.6;
+    color: var(--text-muted);
+    max-height: 260px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+  }
+
+  .empty-state {
+    color: var(--text-muted);
+    font-size: 13px;
+    padding: 40px 0;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">FITNESS<span>RAG</span>AGENT — CONSOLE</div>
+  <div class="health"><span id="healthDot" class="dot"></span><span id="healthText">checking API…</span></div>
+</div>
+
+<div class="layout">
+  <div class="chat-col">
+    <div class="thread" id="thread">
+      <div class="empty-state">Ask something. Try an in-scope question, an out-of-scope one, or something ambiguous — the panel on the right shows exactly how the agent decided to respond.</div>
+    </div>
+    <div class="try-row">
+      <button class="try-chip" data-q="How much protein do I need for resistance training?">in-scope</button>
+      <button class="try-chip" data-q="How to be a cook?">out-of-scope</button>
+      <button class="try-chip" data-q="How many grams should I consume?">ambiguous</button>
+    </div>
+    <form class="composer" id="composer">
+      <input id="questionInput" type="text" placeholder="Ask the fitness knowledge base…" autocomplete="off" />
+      <button type="submit" id="sendBtn">Ask</button>
+    </form>
+  </div>
+
+  <div class="inspect-col">
+    <div class="panel-title">Request Inspector</div>
+    <div class="readout">
+      <div class="readout-row">
+        <span class="readout-key">Status</span>
+        <span class="readout-val" id="statusVal">—</span>
+      </div>
+      <div class="readout-row">
+        <span class="readout-key">Latency</span>
+        <span class="readout-val" id="latencyVal">—</span>
+      </div>
+      <div class="readout-row">
+        <span class="readout-key">Tool called</span>
+        <span class="readout-val" id="toolVal">—</span>
+      </div>
+    </div>
+
+    <div class="panel-title" style="margin-top:22px;">Retrieved Context</div>
+    <div class="context-box" id="contextBox">No request sent yet.</div>
+  </div>
+</div>
+
+<script>
+  // Point this at your running API. Defaults to localhost for local testing;
+  // change to your deployed URL once Day 28 deployment is live.
+  const API_URL = "http://localhost:8000";
+
+  const thread = document.getElementById("thread");
+  const composer = document.getElementById("composer");
+  const input = document.getElementById("questionInput");
+  const sendBtn = document.getElementById("sendBtn");
+  const statusVal = document.getElementById("statusVal");
+  const latencyVal = document.getElementById("latencyVal");
+  const toolVal = document.getElementById("toolVal");
+  const contextBox = document.getElementById("contextBox");
+  const healthDot = document.getElementById("healthDot");
+  const healthText = document.getElementById("healthText");
+
+  function addMessage(role, text, isError=false) {
+    const empty = thread.querySelector(".empty-state");
+    if (empty) empty.remove();
+    const wrap = document.createElement("div");
+    wrap.className = "msg " + role + (isError ? " error" : "");
+    wrap.innerHTML = `<div class="label">${role === "user" ? "You" : "Agent"}</div><div class="bubble"></div>`;
+    wrap.querySelector(".bubble").textContent = text;
+    thread.appendChild(wrap);
+    thread.scrollTop = thread.scrollHeight;
+    return wrap;
+  }
+
+  async function checkHealth() {
+    try {
+      const res = await fetch(API_URL + "/health");
+      if (res.ok) {
+        healthDot.className = "dot up";
+        healthText.textContent = "API online";
+      } else {
+        throw new Error();
+      }
+    } catch {
+      healthDot.className = "dot down";
+      healthText.textContent = "API unreachable — is uvicorn running?";
+    }
+  }
+  checkHealth();
+  setInterval(checkHealth, 15000);
+
+  async function ask(question) {
+    addMessage("user", question);
+    sendBtn.disabled = true;
+    const start = performance.now();
+
+    try {
+      const res = await fetch(API_URL + "/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question })
+      });
+      const elapsed = Math.round(performance.now() - start);
+      const body = await res.json();
+
+      latencyVal.textContent = elapsed + " ms";
+
+      if (res.ok) {
+        statusVal.innerHTML = `<span class="chip ok">${res.status} OK</span>`;
+        const calledTool = !!(body.context && body.context.trim());
+        toolVal.innerHTML = calledTool
+          ? `<span class="chip ok">YES</span>`
+          : `<span class="chip" style="background:rgba(138,145,156,0.15);color:var(--text-muted)">NO</span>`;
+        contextBox.textContent = calledTool ? body.context.trim() : "No retrieval — answered directly (out of scope, conversational, or clarifying question).";
+        addMessage("agent", body.answer);
+      } else {
+        const detail = body.detail || {};
+        statusVal.innerHTML = `<span class="chip err">${res.status} ${detail.error_code || "ERROR"}</span>`;
+        toolVal.textContent = "—";
+        contextBox.textContent = "Request failed before an answer was produced.";
+        addMessage("agent", detail.message || "Something went wrong.", true);
+      }
+    } catch (err) {
+      latencyVal.textContent = "—";
+      statusVal.innerHTML = `<span class="chip err">NETWORK ERROR</span>`;
+      addMessage("agent", "Could not reach the API. Check that uvicorn is running and API_URL is correct.", true);
+    } finally {
+      sendBtn.disabled = false;
+    }
+  }
+
+  composer.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const q = input.value.trim();
+    if (!q) return;
+    input.value = "";
+    ask(q);
+  });
+
+  document.querySelectorAll(".try-chip").forEach(chip => {
+    chip.addEventListener("click", () => ask(chip.dataset.q));
+  });
+</script>
+
+</body>
+</html>
