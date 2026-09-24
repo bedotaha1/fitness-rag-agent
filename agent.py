@@ -190,13 +190,13 @@ def run_agent(
                 )
                 used_context.append(result_str)
 
-    history.append(
-        {
-            "role": "tool",
-            "tool_call_id": call.id,
-            "content": result_str,
-        }
-    )
+                history.append(
+                    {
+                        "role": "tool",
+                        "tool_call_id": call.id,
+                        "content": result_str,
+                    }
+                )
 
 
 def _stream_chat(client_seek: Any, history: list[Any], tools: list[Any] = []) -> Any:
